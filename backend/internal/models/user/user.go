@@ -13,19 +13,21 @@ import (
 // User is a player profile with gamification fields.
 // DailyEmber tracks progress toward finishing today’s daily objective (e.g. points or percent scaled by your app).
 type User struct {
-	ID         int64
-	Nickname   string
-	Email      string
-	Age        sql.NullInt32
-	DailyEmber int
-	Streak     int
-	Avatar     string
-	CreatedAt  time.Time
+	ID         int64          `json:"id"`
+	Nickname   string         `json:"nickname"`
+	Email      string         `json:"email"`
+	Age        sql.NullInt32  `json:"age"`
+	Gender     sql.NullString `json:"gender"`
+	DailyEmber int            `json:"daily_ember"`
+	Streak     int            `json:"streak"`
+	Avatar     string         `json:"avatar"`
+	CreatedAt  time.Time      `json:"created_at"`
 }
 
 var (
-	ErrEmailRequired = errors.New("user: email is required")
-	ErrNotFound      = errors.New("user: not found")
+	ErrEmailRequired   = errors.New("user: email is required")
+	ErrNotFound        = errors.New("user: not found")
+	ErrNothingToUpdate = errors.New("user: neither streak nor daily ember provided to update")
 )
 
 // Save inserts a new user or updates an existing row matched by email.
@@ -101,4 +103,46 @@ WHERE email = $1`
 		return nil, fmt.Errorf("user by email: %w", err)
 	}
 	return &u, nil
+}
+
+// UpdateStreakAndEmber updates daily_ember and/or streak for the row matching Email.
+// Pass nil for a pointer to skip that column; 0 is valid when the pointer is non-nil.
+// Returns ErrNothingToUpdate if both arguments are nil.
+func (u *User) UpdateStreakAndEmber(db *sql.DB, dailyEmber *int, streak *int) error {
+	email := strings.TrimSpace(strings.ToLower(u.Email))
+	if email == "" {
+		return ErrEmailRequired
+	}
+	if dailyEmber == nil && streak == nil {
+		return ErrNothingToUpdate
+	}
+
+	var parts []string
+	var args []any
+	n := 1
+	if dailyEmber != nil {
+		parts = append(parts, fmt.Sprintf("daily_ember = $%d", n))
+		args = append(args, *dailyEmber)
+		n++
+	}
+	if streak != nil {
+		parts = append(parts, fmt.Sprintf("streak = $%d", n))
+		args = append(args, *streak)
+		n++
+	}
+	args = append(args, email)
+	q := fmt.Sprintf("UPDATE users SET %s WHERE email = $%d", strings.Join(parts, ", "), n)
+
+	res, err := db.Exec(q, args...)
+	if err != nil {
+		return fmt.Errorf("user update streak/ember: %w", err)
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("user update streak/ember: %w", err)
+	}
+	if rows == 0 {
+		return ErrNotFound
+	}
+	return nil
 }

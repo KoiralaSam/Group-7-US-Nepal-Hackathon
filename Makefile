@@ -1,7 +1,7 @@
-# Database URL for golang-migrate (override per environment).
-# Example: postgres://USER:PASSWORD@HOST:PORT/DBNAME?sslmode=disable
-# Override locally: export DATABASE_URL='postgres://...' or make migrate-up DATABASE_URL='...'
-DATABASE_URL ?= postgres://postgres:postgres@localhost:5432/g7?sslmode=disable
+# DATABASE_URL from .env when present; override with: make migrate-up DATABASE_URL='...' or export DATABASE_URL.
+ifneq (,$(wildcard .env))
+DATABASE_URL ?= $(shell sed -n 's/^DATABASE_URL=//p' .env | head -1)
+endif
 MIGRATIONS_PATH ?= backend/migrations
 
 .PHONY: migrate-up migrate-down migrate-version migrate-create
