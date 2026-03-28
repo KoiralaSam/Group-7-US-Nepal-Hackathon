@@ -48,13 +48,18 @@ func (u *User) Save(db *sql.DB) error {
 	if u.Age.Valid {
 		age = u.Age.Int32
 	}
+	var gender any
+	if u.Gender.Valid {
+		gender = u.Gender.String
+	}
 
 	const q = `
-INSERT INTO users (nickname, email, age, daily_ember, streak)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO users (nickname, email, age, gender, daily_ember, streak)
+VALUES ($1, $2, $3, $4, $5, $6)
 ON CONFLICT (email) DO UPDATE SET
 	nickname = EXCLUDED.nickname,
 	age = EXCLUDED.age,
+	gender = EXCLUDED.gender,
 	daily_ember = EXCLUDED.daily_ember,
 	streak = EXCLUDED.streak
 RETURNING id, created_at, avatar`
@@ -64,6 +69,7 @@ RETURNING id, created_at, avatar`
 		nick,
 		strings.ToLower(email),
 		age,
+		gender,
 		u.DailyEmber,
 		u.Streak,
 	).Scan(&u.ID, &u.CreatedAt, &u.Avatar)
@@ -81,7 +87,7 @@ func GetByEmail(db *sql.DB, email string) (*User, error) {
 	}
 
 	const q = `
-SELECT id, nickname, email, age, daily_ember, streak, avatar, created_at
+SELECT id, nickname, email, age, gender, daily_ember, streak, avatar, created_at
 FROM users
 WHERE email = $1`
 
@@ -91,6 +97,7 @@ WHERE email = $1`
 		&u.Nickname,
 		&u.Email,
 		&u.Age,
+		&u.Gender,
 		&u.DailyEmber,
 		&u.Streak,
 		&u.Avatar,

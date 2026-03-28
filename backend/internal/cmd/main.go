@@ -2,9 +2,11 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/KoiralaSam/Mindcare/backend/internal/db"
+	"github.com/KoiralaSam/Mindcare/backend/internal/handler"
 	"github.com/joho/godotenv"
 )
 
@@ -26,5 +28,27 @@ func main() {
 	}
 	defer sqlDB.Close()
 
-	log.Println("database connection OK")
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /api/login", handler.LoginHandler(sqlDB))
+	root := withCORS(mux)
+
+	addr := os.Getenv("HTTP_ADDR")
+	if addr == "" {
+		addr = ":8080"
+	}
+	log.Printf("listening on %s (POST /api/login)", addr)
+	log.Fatal(http.ListenAndServe(addr, root))
+}
+
+func withCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
