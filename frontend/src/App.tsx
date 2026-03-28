@@ -1,8 +1,12 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthContext'
+import { CheckInResultPage } from './pages/CheckInResultPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { LandingPage } from './pages/LandingPage'
 import { LoginPage } from './pages/LoginPage'
+import { QuickCheckInPage } from './pages/QuickCheckInPage'
+import { RegisterPage } from './pages/RegisterPage'
+import { SafetySupportPage } from './pages/SafetySupportPage'
 import { ProtectedRoute } from './routes/ProtectedRoute'
 
 export default function App() {
@@ -13,11 +17,36 @@ export default function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
                 <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/check-in"
+            element={
+              <ProtectedRoute>
+                <QuickCheckInPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/check-in/result"
+            element={
+              <ProtectedRoute>
+                <CheckInResultPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/safety"
+            element={
+              <ProtectedRoute>
+                <SafetySupportPage />
               </ProtectedRoute>
             }
           />

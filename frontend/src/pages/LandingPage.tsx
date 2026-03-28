@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
+import { ZONES } from '../assessment/zones'
 import { HeroIllustration } from '../components/landing/HeroIllustration'
 import {
   IconBook,
@@ -11,21 +12,7 @@ import {
 } from '../components/landing/LandingIcons'
 import { ThemeToggle } from '../components/landing/ThemeToggle'
 import { useAuth } from '../auth/AuthContext'
-
-const RESOURCES = [
-  {
-    label: 'WHO — Doing What Matters in Times of Stress',
-    href: 'https://www.who.int/publications/i/item/9789240003927',
-  },
-  {
-    label: 'CDC — How Right Now (stress)',
-    href: 'https://www.cdc.gov/howrightnow/emotion/stress/index.html',
-  },
-  {
-    label: 'CDC — Sleep and health',
-    href: 'https://www.cdc.gov/sleep/about/index.html',
-  },
-] as const
+import { RESOURCES } from '../content/resources'
 
 const SECTIONS = [
   {
@@ -50,37 +37,6 @@ const SECTIONS = [
     title: 'Safety (when needed)',
     detail:
       'One extra question only when scores suggest it. Skip allowed. Honest answers route to human support.',
-  },
-] as const
-
-const ZONES = [
-  {
-    name: 'Green',
-    range: '0–12',
-    label: 'Doing okay',
-    copy: 'Steady place — emotional fitness, habits, and prevention.',
-    tone: 'var(--zone-green)',
-  },
-  {
-    name: 'Yellow',
-    range: '13–22',
-    label: 'Under pressure',
-    copy: 'More strain — stress, overthinking, sleep, regulation.',
-    tone: 'var(--zone-yellow)',
-  },
-  {
-    name: 'Orange',
-    range: '23–34',
-    label: 'Struggling',
-    copy: 'Heavier load — deeper self-help and a nudge to talk to someone.',
-    tone: 'var(--zone-orange)',
-  },
-  {
-    name: 'Red',
-    range: '35–48',
-    label: 'Needs human support',
-    copy: 'Resources and helplines — no celebratory gamification.',
-    tone: 'var(--zone-red)',
   },
 ] as const
 
@@ -168,7 +124,7 @@ export function LandingPage() {
                 <Link to="/login" className="btn btn--ghost landing__nav-secondary">
                   Sign in
                 </Link>
-                <Link to="/login" className="btn btn--primary landing__nav-cta">
+                <Link to="/register" className="btn btn--primary landing__nav-cta">
                   Get started
                 </Link>
               </>
@@ -203,7 +159,10 @@ export function LandingPage() {
                 at a pace that fits you.
               </p>
               <div className="landing__hero-cta">
-                <Link to="/login" className="btn btn--primary landing__btn-lg">
+                <Link
+                  to={email ? '/dashboard' : '/register'}
+                  className="btn btn--primary landing__btn-lg"
+                >
                   {email ? 'Open app' : 'Quick check-in'}
                 </Link>
                 <a href="#how" className="btn btn--ghost landing__btn-lg">
@@ -235,21 +194,23 @@ export function LandingPage() {
             <p>Pick a small, low-pressure step — you can always come back later.</p>
           </div>
           <div className="landing__quick-grid">
-            <Link to="/login" className="landing__quick-card">
+            <Link to={email ? '/dashboard' : '/register'} className="landing__quick-card">
               <span className="landing__quick-icon" aria-hidden>
                 <IconLeaf />
               </span>
               <h3>Daily mood</h3>
               <p>Notice how you feel without judging it — a simple pause before the rest of your day.</p>
-              <span className="landing__quick-cta">Log in to continue →</span>
+              <span className="landing__quick-cta">
+                {email ? 'Open app →' : 'Sign in or create account →'}
+              </span>
             </Link>
-            <Link to="/login" className="landing__quick-card">
+            <Link to={email ? '/dashboard' : '/register'} className="landing__quick-card">
               <span className="landing__quick-icon" aria-hidden>
                 <IconSpark />
               </span>
               <h3>Quick check-in</h3>
               <p>Our short questionnaire helps place you in a support zone — never a diagnosis.</p>
-              <span className="landing__quick-cta">Begin check-in →</span>
+              <span className="landing__quick-cta">{email ? 'Open app →' : 'Begin check-in →'}</span>
             </Link>
             <a href="#features" className="landing__quick-card">
               <span className="landing__quick-icon" aria-hidden>
@@ -366,8 +327,8 @@ export function LandingPage() {
         <section className="landing__closing">
           <h2>Ready when you are</h2>
           <p>No pressure — you can skip for now inside the app when that flow exists.</p>
-          <Link to="/login" className="btn btn--primary landing__btn-lg">
-            {email ? 'Go to dashboard' : 'Begin with sign-in'}
+          <Link to={email ? '/dashboard' : '/register'} className="btn btn--primary landing__btn-lg">
+            {email ? 'Go to dashboard' : 'Create account'}
           </Link>
         </section>
       </main>
