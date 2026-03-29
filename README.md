@@ -25,6 +25,7 @@ Mindcare/
 ├── backend/           # Go module: DB helpers, user model (API server stub)
 │   ├── internal/
 │   └── migrations/   # PostgreSQL (golang-migrate)
+|__ ml/               # Dockerfile  + mental_health_ml.ipynb (Classifier)
 └── Makefile          # Database migration targets
 ```
 
@@ -62,6 +63,14 @@ Mindcare/
 2. Frontend sends data to backend API endpoints.
 3. Backend validates input, reads/writes PostgreSQL, and computes response (with ML fallback logic when needed).
 4. Frontend renders returned zone summary, tasks/resources, and leaderboard data.
+
+### Machine learning model
+
+The prediction service classifies user responses into recommended pace states (support zones) using a tuned **Extra Trees Classifier** (`ExtraTreesClassifier` via scikit-learn). 
+
+The model is trained on a hybrid dataset combining geographic health statistics and text-based sentiment signals sourced from Kaggle:
+- **Tabular/Geography Baseline:** [`imtkaggleteam/mental-health`](https://www.kaggle.com/datasets/imtkaggleteam/mental-health)
+- **Sentiment & Text Signals:** [`suchintikasarkar/sentiment-analysis-for-mental-health`](https://www.kaggle.com/datasets/suchintikasarkar/sentiment-analysis-for-mental-health)
 
 ---
 
