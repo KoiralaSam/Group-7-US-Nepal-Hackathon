@@ -1,12 +1,16 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { DashboardLayout } from '../components/dashboard/DashboardLayout'
 import { fetchLeaderboard, type LeaderboardEntry } from '../api/leaderboard'
+import { useAuth } from '../auth/AuthContext'
 
 export function LeaderboardPage() {
   const [entries, setEntries] = useState<LeaderboardEntry[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const { user } = useAuth()
+
+  const selfNickname = useMemo(() => user?.nickname?.trim().toLowerCase() ?? null, [user])
 
   const load = useCallback(() => {
     setLoading(true)
@@ -56,17 +60,23 @@ export function LeaderboardPage() {
               <p className="dash-app__leaderboard-status">No players yet.</p>
             ) : (
               <ol className="dash-app__leaderboard-list leaderboard-page__list">
-                {entries?.map((row) => (
-                  <li key={`${row.rank}-${row.nickname}`} className="dash-app__leaderboard-row">
-                    <span className="dash-app__leaderboard-rank" aria-hidden>
-                      {row.rank}.
-                    </span>
-                    <span className="dash-app__leaderboard-name">{row.nickname}</span>
-                    <span className="dash-app__leaderboard-streak" title="Day streak">
-                      <span aria-hidden>🔥</span> {row.streak}
-                    </span>
-                  </li>
-                ))}
+                {entries?.map((row) => {
+                  const isYou = selfNickname !== null && row.nickname.trim().toLowerCase() === selfNickname
+                  return (
+                    <li key={`${row.rank}-${row.nickname}`} className="dash-app__leaderboard-row">
+                      <span className="dash-app__leaderboard-rank" aria-hidden>
+                        {row.rank}.
+                      </span>
+                      <span className="dash-app__leaderboard-name">
+                        {row.nickname}
+                        {isYou && <span className="dash-app__leaderboard-you"> (You)</span>}
+                      </span>
+                      <span className="dash-app__leaderboard-streak" title="Day streak">
+                        <span aria-hidden>🔥</span> {row.streak}
+                      </span>
+                    </li>
+                  )
+                })}
               </ol>
             )}
           </div>
