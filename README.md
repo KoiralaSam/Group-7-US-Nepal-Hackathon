@@ -49,6 +49,17 @@ Mindcare/
 
 ---
 
+## Prerequisites
+
+Install these before running the app:
+
+- **Go** (required for backend)
+- **Node.js + npm** (required for frontend)
+- **PostgreSQL** (local DB, if not using Neon/hosted Postgres)
+- **golang-migrate CLI** (required for DB migrations)
+
+---
+
 ## Setup instructions (frontend + backend)
 
 ```bash
