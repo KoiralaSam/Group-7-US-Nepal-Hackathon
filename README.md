@@ -1,61 +1,19 @@
-# Mindcare — Project NLN
+# Mindcare
 
-**NLN** is a Duolingo-style experience for mental health education and check-ins, with copy and framing tailored for **Nepal**. Users answer a short questionnaire (~2 minutes), see a **non-diagnostic** “where you stand” view, and access **learning paths** that match their support zone.
+**Mindcare** is a mental wellbeing check-in and learning app tailored for Nepal. Users complete a short self-check, get a non-diagnostic support zone, and receive relevant next-step resources.
 
 > **This is a self-check for emotional wellbeing, not a diagnosis.** Screening should always be paired with appropriate follow-up and referral paths where risk is elevated.
 
 ---
 
-## What the product does (MVP goals)
+## Product overview
 
-- **Quick assessment** — ~90 seconds to 2 minutes; 12 core questions plus a **conditional** safety item.
-- **Support zones** — Plain-language bands (green / yellow / orange / red) based on a simple risk model, not clinical labels.
-- **Safety first** — If certain answers indicate elevated concern, the app **must** route users to **human support** and crisis-appropriate content—not gamified celebration.
-- **Learn in context** — Educational modules grounded in validated constructs (e.g. PHQ-style mood/anxiety items, GAD-2–style worry, WHO-5–inspired wellbeing, functioning), rewritten in **simpler English** and **Nepal-friendly** language (e.g. “overthinking” where it helps honesty).
+- **Quick check-in:** ~2-minute questionnaire with supportive, plain-language prompts.
+- **Support zones:** Green / Yellow / Orange / Red guidance bands (not clinical diagnosis).
+- **Safety-first flow:** elevated-risk answers route to immediate support resources.
+- **Learning paths:** short lessons and activities based on the current support zone.
 
-External references used in the product design for **green-zone** public-health content include [WHO — Doing What Matters in Times of Stress](https://www.who.int/publications/i/item/9789240003927), [CDC — How Right Now (stress)](https://www.cdc.gov/howrightnow/emotion/stress/index.html), and [CDC — Sleep and health](https://www.cdc.gov/sleep/about/index.html).
-
----
-
-## Assessment structure (spec)
-
-| Section | Focus | Items (example) |
-|--------|--------|-------------------|
-| **Mood & anxiety** | Low mood, anxiety, worry (0–3 frequency scale) | Q1–Q4 |
-| **Wellbeing** | WHO-5–style positives (0–5 scale) | Q5–Q8 |
-| **Daily function** | Impact on work, focus, sleep (0–4) | Q9–Q11 |
-| **Support** | “Someone I can talk to honestly” (Likert) | Q12 |
-| **Safety (conditional)** | Heaviness / not worth continuing | Q13 |
-
-**When to show Q13:** Recommended trigger when mood/anxiety subtotal ≥ **7** *or* function subtotal ≥ **8**. Wording should allow **skip**; answers like **Sometimes** / **Often** trigger an **immediate safety / human support** flow (overrides score-based zones).
-
-**Risk model (product scoring, not a clinical score):**
-
-- Mood/anxiety: sum Q1–Q4 (0–12).
-- Wellbeing risk: **20 −** sum Q5–Q8 (wellbeing 0–20 inverted).
-- Function: sum Q9–Q11 (0–12).
-- Support risk: **4 −** Q12 (0–4).
-
-**Total risk** = mood/anxiety + wellbeing risk + function + support (max **48**).
-
-**Zones (support-oriented copy, not diagnoses):**
-
-| Zone | Score | Intent |
-|------|--------|--------|
-| Green | 0–12 | Doing okay — prevention, habits, basic psychoeducation |
-| Yellow | 13–22 | Under pressure — stress, overthinking, sleep, regulation |
-| Orange | 23–34 | Struggling — deeper self-help, journaling, strong nudge to talk to someone |
-| Red | 35–48 | Needs human support — resources, helplines, no “confetti” tone |
-
-**Hard rule:** Any **Q13** response indicating **Sometimes** or **Often** → **safety support screen** regardless of total score.
-
----
-
-## Learning paths by zone (spec)
-
-Each zone gets **tracks** (e.g. emotional fitness, stress prevention, self-awareness, healthy habits) with short lessons, micro-activities, quizzes, and light gamification—**toned down** for orange/red and **disabled where inappropriate** after safety escalation.
-
-Safety override flow emphasizes Nepal-relevant and general helplines, trusted contacts, and optional grounding-only steps—not heavy reflection.
+Public-health references used in the content direction include [WHO — Doing What Matters in Times of Stress](https://www.who.int/publications/i/item/9789240003927), [CDC — How Right Now (stress)](https://www.cdc.gov/howrightnow/emotion/stress/index.html), and [CDC — Sleep and health](https://www.cdc.gov/sleep/about/index.html).
 
 ---
 
@@ -70,60 +28,61 @@ Mindcare/
 └── Makefile          # Database migration targets
 ```
 
-**Current implementation status**
+## Frontend and backend flow
 
-- **Frontend:** Login screen (demo **email-only** auth stored in `sessionStorage`), protected dashboard placeholder, React Router. Branding in the UI may still say **G7** in places; product direction is **NLN** as above.
-- **Backend:** `internal/db` (Postgres via `lib/pq`), `internal/user` (save/get by email with nickname, age, `daily_ember`, streak, avatar). `internal/cmd/main.go` is a **stub** (no HTTP server yet).
-- **Database:** Migrations define `users` and gamification-related columns; see `backend/migrations/` and `backend/migrations/README.md`.
+- **Frontend (`frontend/`)** is a React + TypeScript + Vite app that handles UI, routes, form input, and authenticated screens.
+- **Backend (`backend/`)** is a Go HTTP API connected to PostgreSQL for user data, leaderboard, and wellness results.
+- In local development, the frontend calls `/api/*`, and Vite proxies those requests to `http://127.0.0.1:8080`.
+
+### Main API endpoints
+
+- `POST /api/login` — finds or creates a user by email (with optional age and gender).
+- `POST /api/wellness-quiz` — accepts quiz answers, computes/fetches prediction, returns frontend-ready result, and updates user embers/streak.
+- `GET /api/leaderboard` — returns ranked streak entries for the dashboard leaderboard.
+
+### Request flow
+
+1. User opens frontend and completes login/check-in.
+2. Frontend sends data to backend API endpoints.
+3. Backend validates input, reads/writes PostgreSQL, and computes response (with ML fallback logic when needed).
+4. Frontend renders returned zone summary, tasks/resources, and leaderboard data.
 
 ---
 
-## Prerequisites
-
-- **Node.js** (for the frontend).
-- **Go** (for the backend module and tooling).
-- **PostgreSQL** (for schema/migrations when you wire the API).
-
----
-
-## Frontend
-
-From `frontend/`:
+## Setup instructions (frontend + backend)
 
 ```bash
+# 1) Install migration CLI
+go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+
+# 2) Create root .env
+cat > .env <<'EOF'
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/g7?sslmode=disable
+HTTP_ADDR=:8080
+EOF
+
+# 3) If using local PostgreSQL and DB does not exist yet, create it
+# (Skip this step for Neon/hosted PostgreSQL)
+createdb g7
+
+# 4) Run migrations (from repo root)
+make migrate-up
+
+# 5) Run backend (terminal 1)
+cd backend
+go run ./internal/cmd
+
+# 6) Run frontend (terminal 2)
+cd frontend
 npm install
 npm run dev
 ```
 
-Build and preview:
-
-```bash
-npm run build
-npm run preview
-```
-
 ---
 
-## Database migrations
+## Ethics and safety guidelines
 
-Install the [golang-migrate](https://github.com/golang-migrate/migrate) CLI, create the database (default name in the Makefile is `g7`), set `DATABASE_URL`, then from the **repo root**:
-
-```bash
-make migrate-up
-```
-
-Details, rollbacks, and creating new migrations: **`backend/migrations/README.md`**.
-
----
-
-## Contributing & ethics
-
-- Treat all user-facing language as **supportive and non-judgmental**; avoid implying diagnosis.
-- **Never** ship screening without vetted escalation and resource content for your deployment region (e.g. Nepal helplines, institutional counseling, crisis lines).
-- Align UX with medical/legal guidance for your jurisdiction; this README is **not** clinical or legal advice.
-
----
-
-## License
-
-See repository license if present; otherwise add one when you open-source or distribute.
+- Use supportive, non-judgmental language in all user-facing copy.
+- Avoid diagnostic claims; the app provides guidance, not medical diagnosis.
+- Keep crisis/escalation resources visible when risk is elevated.
+- Validate local support links/helplines for the deployment region before release.
