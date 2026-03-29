@@ -3,12 +3,12 @@ FROM golang:1.22-alpine AS build
 
 WORKDIR /app
 
-# Cache modules
-COPY go.mod go.sum ./
+# Cache modules (backend lives in ./backend in the repo)
+COPY backend/go.mod backend/go.sum ./
 RUN go mod download
 
-# Copy source
-COPY . .
+# Copy backend source
+COPY backend/. .
 
 # Build the binary
 RUN go build -o app ./internal/cmd
